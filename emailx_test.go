@@ -8,6 +8,45 @@ import (
 	"github.com/carlmjohnson/emailx"
 )
 
+func TestResolvable(t *testing.T) {
+	tests := []struct {
+		in  string
+		out string
+		err bool
+	}{
+		// Invalid format.
+		{in: "", err: true},
+		{in: "email@", err: true},
+		{in: "email@x", err: true},
+		{in: "email@@example.com", err: true},
+		{in: ".email@example.com", err: true},
+		{in: "email.@example.com", err: true},
+		{in: "email..test@example.com", err: true},
+		{in: ".email..test.@example.com", err: true},
+		{in: "email@at@example.com", err: true},
+		{in: "some whitespace@example.com", err: true},
+		{in: "email@whitespace example.com", err: true},
+		{in: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com", err: true},
+		{in: "email@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com", err: true},
+
+		// Unresolvable domain.
+		{in: "email+extra@wrong.example.com", err: true},
+
+		// Valid.
+		{in: "email@gmail.com"},
+		{in: "email.email@gmail.com"},
+		{in: "email+extra@example.com"},
+		{in: "EMAIL@aol.co.uk"},
+		{in: "EMAIL+EXTRA@aol.co.uk"},
+	}
+
+	for _, tt := range tests {
+		if ok := emailx.Resolvable(tt.in); ok == tt.err {
+			t.Errorf("%q: got resolvable %t", tt.in, ok)
+		}
+	}
+}
+
 func TestResolve(t *testing.T) {
 	tests := []struct {
 		in  string
