@@ -1,13 +1,14 @@
 package emailx_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/goware/emailx"
+	"github.com/carlmjohnson/emailx"
 )
 
-func TestValidate(t *testing.T) {
+func TestResolve(t *testing.T) {
 	tests := []struct {
 		in  string
 		out string
@@ -40,7 +41,7 @@ func TestValidate(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		err := emailx.Validate(tt.in)
+		err := emailx.Resolve(tt.in)
 		if err != nil {
 			if !tt.err {
 				t.Errorf(`"%s": unexpected error \"%v\"`, tt.in, err)
@@ -54,7 +55,7 @@ func TestValidate(t *testing.T) {
 	}
 }
 
-func TestValidateFast(t *testing.T) {
+func TestValidate(t *testing.T) {
 	tests := []struct {
 		in  string
 		out string
@@ -84,7 +85,7 @@ func TestValidateFast(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		err := emailx.ValidateFast(tt.in)
+		err := emailx.Validate(tt.in)
 		if err != nil {
 			if !tt.err {
 				t.Errorf(`"%s": unexpected error \"%v\"`, tt.in, err)
@@ -98,16 +99,23 @@ func TestValidateFast(t *testing.T) {
 	}
 }
 
-func ExampleValidate() {
-	err := emailx.Validate("My+Email@wrong.example.com")
-	if err != nil {
+func ExampleValid() {
+	if email := "email.@example.com"; !emailx.Valid(email) {
+		fmt.Printf("%q is not valid\n", email)
+	}
+	// Output:
+	// "email.@example.com" is not valid
+}
+
+func ExampleResolve() {
+	if err := emailx.Resolve("My+Email@wrong.example.com"); err != nil {
 		fmt.Println("Email is not valid.")
 
-		if err == emailx.ErrInvalidFormat {
+		if errors.Is(err, emailx.ErrInvalidFormat) {
 			fmt.Println("Wrong format.")
 		}
 
-		if err == emailx.ErrUnresolvableHost {
+		if errors.Is(err, emailx.ErrUnresolvableHost) {
 			fmt.Println("Unresolvable host.")
 		}
 	}

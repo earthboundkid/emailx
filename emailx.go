@@ -20,31 +20,17 @@ var (
 	userDotRegexp = regexp.MustCompile("(^[.]{1})|([.]{1}$)|([.]{2,})")
 )
 
-// Validate checks format of a given email and resolves its host name.
-func Validate(email string) error {
-	if len(email) < 6 || len(email) > 254 {
-		return ErrInvalidFormat
-	}
+// Resolvable reports if Resolve succeeds
+func Resolvable(email string) bool {
+	return Resolve(email) == nil
+}
 
-	at := strings.LastIndex(email, "@")
-	if at <= 0 || at > len(email)-3 {
-		return ErrInvalidFormat
+// Resolve checks the validity of a given address and resolves its host name.
+func Resolve(email string) error {
+	if err := Validate(email); err != nil {
+		return err
 	}
-
-	user := email[:at]
-	host := email[at+1:]
-
-	if len(user) > 64 {
-		return ErrInvalidFormat
-	}
-	if userDotRegexp.MatchString(user) || !userRegexp.MatchString(user) || !hostRegexp.MatchString(host) {
-		return ErrInvalidFormat
-	}
-
-	switch host {
-	case "localhost", "example.com":
-		return nil
-	}
+	_, host := Split(email)
 
 	if _, err := net.LookupMX(host); err != nil {
 		if _, err := net.LookupIP(host); err != nil {
@@ -57,28 +43,42 @@ func Validate(email string) error {
 	return nil
 }
 
-// ValidateFast checks format of a given email.
-func ValidateFast(email string) error {
+// Valid reports if Validate succeeds.
+func Valid(email string) bool {
+	return Validate(email) == nil
+}
+
+// Validate checks format of a given email.
+func Validate(email string) error {
 	if len(email) < 6 || len(email) > 254 {
 		return ErrInvalidFormat
 	}
 
-	at := strings.LastIndex(email, "@")
-	if at <= 0 || at > len(email)-3 {
-		return ErrInvalidFormat
-	}
-
-	user := email[:at]
-	host := email[at+1:]
-
-	if len(user) > 64 {
-		return ErrInvalidFormat
-	}
-	if userDotRegexp.MatchString(user) || !userRegexp.MatchString(user) || !hostRegexp.MatchString(host) {
+	user, host := Split(email)
+	switch {
+	case len(user) < 1,
+		len(user) > 64,
+		len(host) < 3,
+		userDotRegexp.MatchString(user),
+		!userRegexp.MatchString(user),
+		!hostRegexp.MatchString(host):
 		return ErrInvalidFormat
 	}
 
 	return nil
+}
+
+// Split attempts to split an address into user and host portions.
+// Split does not perform any validation.
+func Split(email string) (user, host string) {
+	at := strings.LastIndex(email, "@")
+	if at == -1 {
+		return
+	}
+
+	user = email[:at]
+	host = email[at+1:]
+	return
 }
 
 // Normalize normalizes email address.
