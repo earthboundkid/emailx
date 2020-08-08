@@ -3,6 +3,7 @@ package emailx_test
 import (
 	"errors"
 	"fmt"
+	"runtime"
 	"testing"
 
 	"github.com/carlmjohnson/emailx"
@@ -204,5 +205,35 @@ func TestSplit(t *testing.T) {
 		if tt.host != host {
 			t.Errorf("%q host %q != %q", tt.in, tt.host, host)
 		}
+	}
+}
+
+var benchSink bool
+
+func BenchmarkValidate(b *testing.B) {
+	cases := []string{
+		"",
+		"email@",
+		"email@x",
+		"email@@example.com",
+		".email@example.com",
+		"email.@example.com",
+		"email..test@example.com",
+		".email..test.@example.com",
+		"email@at@example.com",
+		"some whitespace@example.com",
+		"email@whitespace example.com",
+		"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com",
+		"email@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+		"email+extra@wrong.example.com",
+		"email@gmail.com",
+		"email.email@gmail.com",
+		"email+extra@example.com",
+		"EMAIL@aol.co.uk",
+		"EMAIL+EXTRA@aol.co.uk",
+	}
+	for i := 0; i < b.N; i++ {
+		benchSink = emailx.Valid(cases[i%len(cases)])
+		runtime.KeepAlive(benchSink)
 	}
 }

@@ -3,7 +3,6 @@ package emailx
 import (
 	"errors"
 	"net"
-	"regexp"
 	"strings"
 )
 
@@ -12,12 +11,6 @@ var (
 	ErrInvalidFormat = errors.New("invalid format")
 	//ErrUnresolvableHost returns when validator couldn't resolve email's host
 	ErrUnresolvableHost = errors.New("unresolvable host")
-
-	userRegexp = regexp.MustCompile("^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~.-]+$")
-	hostRegexp = regexp.MustCompile("^[^\\s]+\\.[^\\s]+$")
-	// As per RFC 5332 secion 3.2.3: https://tools.ietf.org/html/rfc5322#section-3.2.3
-	// Dots are not allowed in the beginning, end or in occurances of more than 1 in the email address
-	userDotRegexp = regexp.MustCompile("(^[.]{1})|([.]{1}$)|([.]{2,})")
 )
 
 // Resolvable reports if Resolve succeeds
@@ -48,6 +41,25 @@ func Valid(email string) bool {
 	return Validate(email) == nil
 }
 
+var isValidUser func(s string) bool = func() func(s string) bool {
+	const validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+		"abcdefghijklmnopqrstuvwxyz" +
+		"0123456789" +
+		"!#$%&'*+/=?^_`{|}~.-]+$"
+	m := [256]bool{}
+	for i := range validChars {
+		m[validChars[i]] = true
+	}
+	return func(s string) bool {
+		for _, b := range []byte(s) {
+			if !m[b] {
+				return false
+			}
+		}
+		return true
+	}
+}()
+
 // Validate checks format of a given email.
 func Validate(email string) error {
 	if len(email) < 6 || len(email) > 254 {
@@ -59,9 +71,18 @@ func Validate(email string) error {
 	case len(user) < 1,
 		len(user) > 64,
 		len(host) < 3,
-		userDotRegexp.MatchString(user),
-		!userRegexp.MatchString(user),
-		!hostRegexp.MatchString(host):
+		// As per RFC 5332 section 3.2.3:
+		// https://tools.ietf.org/html/rfc5322#section-3.2.3
+		!isValidUser(user),
+		// Dots are not allowed in the beginning, end
+		// or in groups of more than 1 in the user address
+		strings.HasPrefix(user, "."),
+		strings.HasSuffix(user, "."),
+		strings.Contains(user, ".."),
+		// No whitespace in host
+		strings.ContainsAny(host, "\t\n\f\r "),
+		// Host must contain .
+		!strings.Contains(host, "."):
 		return ErrInvalidFormat
 	}
 
