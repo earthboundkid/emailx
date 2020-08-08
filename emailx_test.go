@@ -145,3 +145,25 @@ func ExampleNormalize() {
 	fmt.Println(emailx.Normalize(" Email+Me@example.com. "))
 	// Output: email+me@example.com
 }
+
+func TestSplit(t *testing.T) {
+	tests := []struct {
+		in, user, host string
+	}{
+		{"", "", ""},
+		{"user@", "user", ""},
+		{"@host", "", "host"},
+		{"user@host", "user", "host"},
+		{"user@subuser@host", "user@subuser", "host"},
+	}
+
+	for _, tt := range tests {
+		user, host := emailx.Split(tt.in)
+		if tt.user != user {
+			t.Errorf("%q user %q != %q", tt.in, tt.user, user)
+		}
+		if tt.host != host {
+			t.Errorf("%q host %q != %q", tt.in, tt.host, host)
+		}
+	}
+}
