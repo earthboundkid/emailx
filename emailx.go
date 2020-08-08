@@ -1,3 +1,4 @@
+// package emailx contains helpers for email address validation and normalization
 package emailx
 
 import (
@@ -7,9 +8,9 @@ import (
 )
 
 var (
-	//ErrInvalidFormat returns when email's format is invalid
+	// ErrInvalidFormat is returned when email's format is invalid
 	ErrInvalidFormat = errors.New("invalid format")
-	//ErrUnresolvableHost returns when validator couldn't resolve email's host
+	// ErrUnresolvableHost is returned when Resolve couldn't resolve email's host
 	ErrUnresolvableHost = errors.New("unresolvable host")
 )
 
@@ -89,8 +90,8 @@ func Validate(email string) error {
 	return nil
 }
 
-// Split attempts to split an address into user and host portions.
-// Split does not perform any validation.
+// Split an address into user and host portions.
+// Split does not perform any validation or normalization.
 func Split(email string) (user, host string) {
 	at := strings.LastIndex(email, "@")
 	if at == -1 {
@@ -102,7 +103,7 @@ func Split(email string) (user, host string) {
 	return
 }
 
-// Normalize normalizes email address.
+// Normalize an email address.
 func Normalize(email string) string {
 	// Trim whitespaces.
 	email = strings.TrimSpace(email)
