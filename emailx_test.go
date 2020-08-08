@@ -28,15 +28,23 @@ var validitycases = []struct {
 	{"email@whitespace example.com", false, false},
 	{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com", false, false},
 	{"email@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com", false, false},
+	{"emailaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@email.com", false, false},
 	// Unresolvable domain.
 	{"email+extra@wrong.example.com", true, false},
 	{"{email+extra}@wrong.example.com", true, false},
+	{
+		"abcdefghijklmnopqrstuvwxyz" +
+			"0123456789" +
+			"!#$%&'*+/=?^_`{|}~.-]@t.d", true, false},
+	{"emailaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@12345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678001234567800123456780123.com", true, false},
+
 	// Valid + resolvable
 	{"{email}@gmail.com", true, true},
 	{"email@gmail.com", true, true},
 	{"email.email@gmail.com", true, true},
 	{"email+extra@example.com", true, true},
 	{"EMAIL@aol.co.uk", true, true},
+	{"emailaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@email.com", true, true},
 	{"EMAIL+EXTRA@aol.co.uk", true, true},
 }
 
