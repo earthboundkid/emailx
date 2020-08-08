@@ -1,4 +1,4 @@
-// package emailx contains helpers for email address validation and normalization
+// Package emailx contains helpers for email address validation and normalization.
 package emailx
 
 import (
