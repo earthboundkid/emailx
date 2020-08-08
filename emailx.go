@@ -42,14 +42,14 @@ func Valid(email string) bool {
 	return Validate(email) == nil
 }
 
-var isValidUser func(s string) bool = func() func(s string) bool {
+var isValidUser = func() func(s string) bool {
 	const validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
 		"abcdefghijklmnopqrstuvwxyz" +
 		"0123456789" +
 		"!#$%&'*+/=?^_`{|}~.-]+$"
-	m := [256]bool{}
-	for i := range validChars {
-		m[validChars[i]] = true
+	var m [256]bool
+	for _, c := range validChars {
+		m[c] = true
 	}
 	return func(s string) bool {
 		for _, b := range []byte(s) {
