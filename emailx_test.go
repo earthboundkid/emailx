@@ -9,132 +9,59 @@ import (
 	"github.com/carlmjohnson/emailx"
 )
 
+var validitycases = []struct {
+	email      string
+	valid      bool
+	resolvable bool
+}{
+	// Invalid format.
+	{"", false, false},
+	{"email@", false, false},
+	{"email@x", false, false},
+	{"email@@example.com", false, false},
+	{".email@example.com", false, false},
+	{"email.@example.com", false, false},
+	{"email..test@example.com", false, false},
+	{".email..test.@example.com", false, false},
+	{"email@at@example.com", false, false},
+	{"some whitespace@example.com", false, false},
+	{"email@whitespace example.com", false, false},
+	{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com", false, false},
+	{"email@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com", false, false},
+	// Unresolvable domain.
+	{"email+extra@wrong.example.com", true, false},
+	{"{email+extra}@wrong.example.com", true, false},
+	// Valid + resolvable
+	{"{email}@gmail.com", true, true},
+	{"email@gmail.com", true, true},
+	{"email.email@gmail.com", true, true},
+	{"email+extra@example.com", true, true},
+	{"EMAIL@aol.co.uk", true, true},
+	{"EMAIL+EXTRA@aol.co.uk", true, true},
+}
+
 func TestResolvable(t *testing.T) {
-	tests := []struct {
-		in  string
-		out string
-		err bool
-	}{
-		// Invalid format.
-		{in: "", err: true},
-		{in: "email@", err: true},
-		{in: "email@x", err: true},
-		{in: "email@@example.com", err: true},
-		{in: ".email@example.com", err: true},
-		{in: "email.@example.com", err: true},
-		{in: "email..test@example.com", err: true},
-		{in: ".email..test.@example.com", err: true},
-		{in: "email@at@example.com", err: true},
-		{in: "some whitespace@example.com", err: true},
-		{in: "email@whitespace example.com", err: true},
-		{in: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com", err: true},
-		{in: "email@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com", err: true},
-
-		// Unresolvable domain.
-		{in: "email+extra@wrong.example.com", err: true},
-
-		// Valid.
-		{in: "email@gmail.com"},
-		{in: "email.email@gmail.com"},
-		{in: "email+extra@example.com"},
-		{in: "EMAIL@aol.co.uk"},
-		{in: "EMAIL+EXTRA@aol.co.uk"},
-	}
-
-	for _, tt := range tests {
-		if ok := emailx.Resolvable(tt.in); ok == tt.err {
-			t.Errorf("%q: got resolvable %t", tt.in, ok)
+	for _, tt := range validitycases {
+		if ok := emailx.Resolvable(tt.email); ok != tt.resolvable {
+			t.Errorf("%q: got resolvable %t", tt.email, ok)
 		}
 	}
 }
 
 func TestResolve(t *testing.T) {
-	tests := []struct {
-		in  string
-		out string
-		err bool
-	}{
-		// Invalid format.
-		{in: "", err: true},
-		{in: "email@", err: true},
-		{in: "email@x", err: true},
-		{in: "email@@example.com", err: true},
-		{in: ".email@example.com", err: true},
-		{in: "email.@example.com", err: true},
-		{in: "email..test@example.com", err: true},
-		{in: ".email..test.@example.com", err: true},
-		{in: "email@at@example.com", err: true},
-		{in: "some whitespace@example.com", err: true},
-		{in: "email@whitespace example.com", err: true},
-		{in: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com", err: true},
-		{in: "email@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com", err: true},
-
-		// Unresolvable domain.
-		{in: "email+extra@wrong.example.com", err: true},
-
-		// Valid.
-		{in: "email@gmail.com"},
-		{in: "email.email@gmail.com"},
-		{in: "email+extra@example.com"},
-		{in: "EMAIL@aol.co.uk"},
-		{in: "EMAIL+EXTRA@aol.co.uk"},
-	}
-
-	for _, tt := range tests {
-		err := emailx.Resolve(tt.in)
-		if err != nil {
-			if !tt.err {
-				t.Errorf(`"%s": unexpected error \"%v\"`, tt.in, err)
-			}
-			continue
-		}
-		if tt.err && err == nil {
-			t.Errorf(`"%s": expected error`, tt.in)
-			continue
+	for _, tt := range validitycases {
+		err := emailx.Resolve(tt.email)
+		if err == nil != tt.resolvable {
+			t.Errorf("%q: unexpected error: %v", tt.email, err)
 		}
 	}
 }
 
 func TestValidate(t *testing.T) {
-	tests := []struct {
-		in  string
-		out string
-		err bool
-	}{
-		// Invalid format.
-		{in: "", err: true},
-		{in: "email@", err: true},
-		{in: "email@x", err: true},
-		{in: "email@@example.com", err: true},
-		{in: ".email@example.com", err: true},
-		{in: "email.@example.com", err: true},
-		{in: "email..test@example.com", err: true},
-		{in: ".email..test.@example.com", err: true},
-		{in: "email@at@example.com", err: true},
-		{in: "some whitespace@example.com", err: true},
-		{in: "email@whitespace example.com", err: true},
-		{in: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com", err: true},
-		{in: "email@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com", err: true},
-
-		// Valid.
-		{in: "email@gmail.com"},
-		{in: "email.email@gmail.com"},
-		{in: "email+extra@example.com"},
-		{in: "EMAIL@aol.co.uk"},
-		{in: "EMAIL+EXTRA@aol.co.uk"},
-	}
-
-	for _, tt := range tests {
-		err := emailx.Validate(tt.in)
-		if err != nil {
-			if !tt.err {
-				t.Errorf(`"%s": unexpected error \"%v\"`, tt.in, err)
-			}
-			continue
-		}
-		if tt.err && err == nil {
-			t.Errorf(`"%s": expected error`, tt.in)
-			continue
+	for _, tt := range validitycases {
+		err := emailx.Validate(tt.email)
+		if err == nil != tt.valid {
+			t.Errorf("%q: unexpected error: %v", tt.email, err)
 		}
 	}
 }
@@ -211,29 +138,12 @@ func TestSplit(t *testing.T) {
 var benchSink bool
 
 func BenchmarkValidate(b *testing.B) {
-	cases := []string{
-		"",
-		"email@",
-		"email@x",
-		"email@@example.com",
-		".email@example.com",
-		"email.@example.com",
-		"email..test@example.com",
-		".email..test.@example.com",
-		"email@at@example.com",
-		"some whitespace@example.com",
-		"email@whitespace example.com",
-		"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com",
-		"email@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
-		"email+extra@wrong.example.com",
-		"email@gmail.com",
-		"email.email@gmail.com",
-		"email+extra@example.com",
-		"EMAIL@aol.co.uk",
-		"EMAIL+EXTRA@aol.co.uk",
-	}
 	for i := 0; i < b.N; i++ {
-		benchSink = emailx.Valid(cases[i%len(cases)])
-		runtime.KeepAlive(benchSink)
+		tt := validitycases[i%len(validitycases)]
+		benchSink = emailx.Valid(tt.email)
+		if benchSink != tt.valid {
+			b.FailNow()
+		}
 	}
+	runtime.KeepAlive(benchSink)
 }
