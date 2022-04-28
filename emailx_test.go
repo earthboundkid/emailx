@@ -38,6 +38,11 @@ var validitycases = []struct {
 			"0123456789" +
 			"!#$%&'*+/=?^_`{|}~.-]@t.d", true, false},
 	{"emailaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@12345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678001234567800123456780123.com", true, false},
+	{"0@0\x8000", false, false},
+	{"0@\xe7̾\xb9\xf2\xd5", false, false},
+	{"0@00000000000000000000000000000000", false, false},
+	{"0@\xff\xb1\xb1\xb1\xb1\xb1\xb1\xff", false, false},
+	{"0@000 00000", false, false},
 
 	// Valid + resolvable
 	{"{email}@gmail.com", true, true},
@@ -155,4 +160,14 @@ func BenchmarkValidate(b *testing.B) {
 		}
 	}
 	runtime.KeepAlive(benchSink)
+}
+
+func FuzzValidate(f *testing.F) {
+	for _, tt := range validitycases {
+		f.Add(tt.email)
+	}
+
+	f.Fuzz(func(t *testing.T, email string) {
+		emailx.Valid(email)
+	})
 }
