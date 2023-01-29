@@ -5,6 +5,8 @@ import (
 	"errors"
 	"net"
 	"strings"
+
+	"github.com/carlmjohnson/bytemap"
 )
 
 var (
@@ -42,24 +44,13 @@ func Valid(email string) bool {
 	return Validate(email) == nil
 }
 
-var isValidUser = func() func(s string) bool {
-	const validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+var isValidUser = bytemap.Make(
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
 		"abcdefghijklmnopqrstuvwxyz" +
 		"0123456789" +
-		"!#$%&'*+/=?^_`{|}~.-]+$"
-	var m [256]bool
-	for _, c := range validChars {
-		m[c] = true
-	}
-	return func(s string) bool {
-		for _, b := range []byte(s) {
-			if !m[b] {
-				return false
-			}
-		}
-		return true
-	}
-}()
+		"!#$%&'*+/=?^_`{|}~.-]+$")
+
+var noWhitespace = bytemap.Make("\t\n\f\r ").Invert()
 
 // Validate checks format of a given email.
 func Validate(email string) error {
@@ -74,14 +65,14 @@ func Validate(email string) error {
 		len(host) < 3,
 		// As per RFC 5332 section 3.2.3:
 		// https://tools.ietf.org/html/rfc5322#section-3.2.3
-		!isValidUser(user),
+		!isValidUser.Contains(user),
 		// Dots are not allowed in the beginning, end
 		// or in groups of more than 1 in the user address
 		strings.HasPrefix(user, "."),
 		strings.HasSuffix(user, "."),
 		strings.Contains(user, ".."),
 		// No whitespace in host
-		strings.ContainsAny(host, "\t\n\f\r "),
+		!noWhitespace.Contains(host),
 		// Host must contain .
 		!strings.Contains(host, "."):
 		return ErrInvalidFormat

@@ -39,7 +39,7 @@ var validitycases = []struct {
 			"!#$%&'*+/=?^_`{|}~.-]@t.d", true, false},
 	{"emailaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@12345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678012345678001234567800123456780123.com", true, false},
 	{"0@0\x8000", false, false},
-	{"0@\xe7̾\xb9\xf2\xd5", false, false},
+	{"0@\xe7\u033E\xb9\xf2\xd5", false, false},
 	{"0@00000000000000000000000000000000", false, false},
 	{"0@\xff\xb1\xb1\xb1\xb1\xb1\xb1\xff", false, false},
 	{"0@000 00000", false, false},
