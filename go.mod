@@ -1,7 +1,5 @@
-module github.com/carlmjohnson/emailx
+module github.com/earthboundkid/emailx/v2
 
-go 1.19
+go 1.23
 
-require github.com/carlmjohnson/bytemap v0.23.3
-
-require golang.org/x/exp v0.0.0-20230126173853-a67bb567ff2e // indirect
+require github.com/earthboundkid/bytemap/v2 v2.24.1

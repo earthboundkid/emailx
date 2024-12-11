@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/carlmjohnson/emailx"
+	"github.com/earthboundkid/emailx/v2"
 )
 
 var validitycases = []struct {
